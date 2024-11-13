@@ -1,0 +1,93 @@
+services:
+  postgresql:
+    image: docker.io/bitnami/postgresql:15
+    volumes:
+      - "postgresql_data:/bitnami/postgresql"
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      ALLOW_EMPTY_PASSWORD: "yes"
+      POSTGRESQL_USERNAME: bn_odoo
+      POSTGRESQL_DATABASE: bitnami_odoo
+  odoo:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        ADDONS_PATH: "/opt/bitnami/odoo/addons"
+    container_name: odoo
+    command:
+      - "/opt/bitnami/scripts/odoo/run.sh"
+      # - "-i"
+      # - "auth_oauth,web,point_of_sale,auth_keycloak,oaf_roles,sap_pos_sync,oaf_customers,multi_shops,oaf_shop_stock_take,oaf_shop_stock_report,oaf_damaged_goods,oaf_pos_product_discount,multi_shops_pos,oaf_stock_transfer,oaf_stock_variance_report,oaf_pos,oaf_products,oaf_customer_vendor_separation,clear_data,oaf_countries_and_companies,oaf_offer_product,oaf_fineract_setup,oaf_ou_selection,oaf_read_only_access,ce_portal,sybyl_infobip_sms_integration,sybyl_oaf_kenya_etr,sybyl_etr_external_api,oaf_shop_agent,sales_order_delivery_status,rabbitmq_connector,pos_order_notes,sybyl_pos_reports,sh_pos_customer_create_offline,oaf_paymentshub,web_responsive,oaf_pos_cache,oaf_warranty_management,web_progress,web_notify,pos_order_to_sale_order,infobip_connector,oaf_order_fulfillment,as_odoo_json_request_response_handler,oaf_shop_wh_mapping,sentry,stock_change_qty_reason,oaf_delivery_split,oaf_rabbitmq_multi_shop,oaf_rabbitmq_shop_pricelist,website_analytics_matomo,oaf_pos_customer_required_fields,pos_session_statement_auto_open,oaf_client_registration,oaf_stock_picking_bulk_update,stock_reserve,oaf_order_sms,oaf_offer_eligibility_check,oaf_loan_eligibility_check"
+      # - "--test-tags=/auth_keycloak,/pos_fineract"
+      - "--log-level=test"
+      - "--log-handler=werkzeug:CRITICAL"
+      # - "--load=base,web,rabbitmq_connector" this will be enabled when we add the rabbitmq_connector module
+    ports:
+      - "8069:8069"
+    volumes:
+      - "odoo_data:/bitnami/odoo"
+    depends_on:
+      - postgresql
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      ODOO_EMAIL: admin.odoo@oneacrefund.org
+      ODOO_PASSWORD: password
+      ALLOW_EMPTY_PASSWORD: "no"
+      ODOO_API_USER: changeme
+      ODOO_API_PASSWORD: changeme
+      ODOO_DATABASE_HOST: postgresql
+      ODOO_DATABASE_PORT_NUMBER: "5432"
+      ODOO_DATABASE_USER: bn_odoo
+      ODOO_DATABASE_NAME: bitnami_odoo
+      ODOO_DATABASE_PASSWORD: password
+      ODOO_ADDONS_DIR: "/opt/bitnami/odoo/addons,/opt/bitnami/odoo/third-party-addons"
+      ODOO_LOAD_DEMO_DATA: "no"
+      ODOO_SKIP_MODULES_UPDATE: "no"
+      CLIENT_ID: odoo-sales
+      AUTO_REDIRECT_KEYCLOAK: "True"
+      AUTHENTICATION_URL: "https://accounts.test.oneacrefund.org/realms/OneAcreFund/protocol/openid-connect/auth"
+      VALIDATION_URL: "https://accounts.test.oneacrefund.org/realms/OneAcreFund/protocol/openid-connect/token/introspect"
+      DATA_URL: "https://accounts.test.oneacrefund.org/realms/OneAcreFund/protocol/openid-connect/userinfo"
+      USER_ENDPOINT: "https://accounts.test.oneacrefund.org/admin/realms/OneAcreFund/users"
+      AUTH_SCOPE: openid
+      KEYCLOAK_API_URL: "https://api.test.oneacrefund.org/function/keycloak-api"
+      FINERACT_USERNAME: fiter@oneacrefund.org
+      FINERACT_PASSWORD: changeme
+      FINERACT_CLIENT_ID: fineract
+      FINERACT_CLIENT_SECRET: ""
+      FINERACT_TOKEN_URL: "https://accounts.test.oneacrefund.org/realms/OneAcreFund/protocol/openid-connect/token"
+      FINERACT_URL: "https://loans.test.oneacrefund.org/fineract-provider"
+      SAP_URL: "https://saphana02.oneacrefund.org:50000"
+      SAP_USERNAME: admin
+      SAP_PASSWORD: changeme
+      SAP_SECURE_API_URL: "https://secure-api.qa.oneacrefund.org/functions"
+      SAP_SECURE_API_KEY: changeme
+      SMS_URL: "https://p932l.api.infobip.com"
+      SMS_APIKEY: changeme
+      INFOBIP_CONNECTION_NAME:
+      INFOBIP_CONNECTION_URL: "https://p932l.api.infobip.com"
+      INFOBIP_CONNECTION_API_KEY: changeme
+      INFOBIP_SHORT_LINK_CONNECTION_URL: changeme
+      INFOBIP_SHORT_LINK_CONNECTION_API_KEY: changeme
+      PHONE_NO_REGEX_NIGERIA: changeme
+      PHONE_NO_REGEX_KENYA: changeme
+      OAF_OCR_API_URL: changeme
+      OAF_OCR_API_KEY: changeme
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - 80:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin.pgadmin@oneacrefund.org
+      PGADMIN_DEFAULT_PASSWORD: password
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+volumes:
+  postgresql_data:
+    driver: local
+  odoo_data:
+    driver: local
+  pgadmin_data:
+    driver: local
